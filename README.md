@@ -1,5 +1,7 @@
 # FinFET drain-current surrogate (finfet-ids-surrogate)
 
+**English** · [简体中文](README_CN.md)
+
 A small PyTorch study that learns the drain current of a 15 nm-class n-type FinFET from BSIM-CMG simulation data, and checks where a plain neural-network surrogate is and is not reliable.
 
 Inputs are fin number, channel length, process corner, temperature, V<sub>ds</sub> and V<sub>gs</sub>; the output is I<sub>ds</sub>.
