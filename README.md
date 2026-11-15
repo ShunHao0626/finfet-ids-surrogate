@@ -2,7 +2,9 @@
 
 **English** · [简体中文](README_CN.md)
 
-A small PyTorch study that learns the drain current of a 15 nm-class n-type FinFET from BSIM-CMG simulation data, and checks where a plain neural-network surrogate is and is not reliable.
+A PyTorch study of how well a neural-network surrogate reproduces BSIM-CMG drain-current simulations for a 15 nm-class n-type FinFET. I revisited a 2025 team project with seeded runs and held-out bias-point, curve, and temperature evaluations.
+
+**Main finding.** The model follows the on-state current trend on a linear scale, yet its high R² conceals large relative errors and unreliable subthreshold predictions. The comparison across operating regimes is the central result.
 
 Inputs are fin number, channel length, process corner, temperature, V<sub>ds</sub> and V<sub>gs</sub>; the output is I<sub>ds</sub>.
 
@@ -24,9 +26,9 @@ This started as a two-person project (Shun Hao Pang and Jiayi Zhu) in the Shangh
 
 ## Results
 
-Test metrics, mean of three seeds (0, 1, 2). MAPE is computed only for points with |I<sub>ds</sub>| > 1 µA.
+Held-out metrics are means over three seeds (0, 1, 2). Early stopping monitors the same held-out partition, so these are model-selection metrics rather than independent final-test estimates. MAPE is computed for points with |I<sub>ds</sub>| > 1 µA.
 
-| Split | What is held out | Test points | R² (mean, range) | RMSE (µA) | MAPE above 1 µA |
+| Split | What is held out | Evaluation points | R² (mean, range) | RMSE (µA) | MAPE above 1 µA |
 | --- | --- | --- | --- | --- | --- |
 | `ordered` | last 10 % of the file, as in the 2025 script | 113 | 0.996 (0.996–0.998) | 32 | 54 % |
 | `random-points` | random 10 % of bias points | 113 | 0.997 (0.996–0.998) | 23 | 78 % |
@@ -39,13 +41,11 @@ Test metrics, mean of three seeds (0, 1, 2). MAPE is computed only for points wi
 
 **What this shows**
 
-1. **Above threshold the surrogate is accurate.** On a linear scale the predicted curves follow BSIM-CMG closely, and R² stays above 0.99 for unseen sweeps.
-2. **Below threshold it fails.** On a log scale the predictions are off by orders of magnitude and can turn negative. The loss is computed on linear current, so near-zero currents carry almost no weight; the high R² hides this, and the large relative error exposes it.
-3. **Extrapolating in temperature costs accuracy.** Holding out all 125 °C data lowers R² and roughly doubles the error.
+1. **On-state trends are captured on a linear scale.** R² stays above 0.99 for held-out sweeps, while MAPE above 1 µA remains 75 % for the random-curve split. The two metrics describe different aspects of fit.
+2. **Subthreshold current remains unresolved.** On a log scale, predictions can differ by orders of magnitude or turn negative. The linear-current loss places little weight on near-zero values.
+3. **Temperature extrapolation is harder.** Holding out all 125 °C sweeps lowers R² to 0.988 and raises RMSE to 46 µA.
 
-The first point is why the original 2025 figures looked convincing; the second is the main limitation. A log-current or arcsinh target, or a physics-based output layer, would be the natural next step for subthreshold behavior.
-
-**Caveat.** As in the original script, early stopping monitors the held-out set, so the test metrics are slightly optimistic.
+A log-current or arcsinh target, or a physics-based output layer, is a concrete next experiment for subthreshold behavior.
 
 ## Reproduce
 
